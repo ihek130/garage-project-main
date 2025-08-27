@@ -1,0 +1,140 @@
+/* Additional fixes for white-on-white hover issues */
+
+/* Fix for any remaining button hover issues */
+button:hover {
+  color: inherit !important;
+}
+
+.dashboard-card button:hover {
+  color: inherit !important;
+  background: transparent !important;
+}
+
+/* Ensure links in dashboard cards inherit color properly */
+.dashboard-card a,
+.dashboard-card a:visited,
+.dashboard-card a:hover {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.dashboard-card:hover a,
+.dashboard-card:hover button,
+.dashboard-card:hover span {
+  color: white !important;
+}
+
+/* Fix for employee selection card - no hover color change */
+.card:has(select),
+.card:has(.form-input) {
+  cursor: default !important;
+}
+
+.card:has(select):hover,
+.card:has(.form-input):hover {
+  background: white !important;
+  color: inherit !important;
+  transform: none !important;
+}
+
+/* Prevent hover color changes on form containers */
+.card:has(form):hover {
+  background: white !important;
+  color: inherit !important;
+}
+
+.card:has(form) label,
+.card:has(form) input,
+.card:has(form) select {
+  color: var(--primary-dark) !important;
+}
+
+/* Fix select and input hover states */
+select:hover,
+input:hover {
+  border-color: var(--primary-orange);
+}
+
+/* Ensure proper contrast for all interactive elements */
+.btn:hover:not(.btn-ghost) {
+  color: white !important;
+}
+
+.btn-secondary:hover {
+  color: white !important;
+}
+
+/* Navigation fixes */
+.nav-item:hover {
+  color: var(--primary-orange) !important;
+  background: var(--light-gray) !important;
+}
+
+.nav-item.active {
+  color: white !important;
+  background: var(--primary-orange) !important;
+}
+
+/* Form element improvements */
+.form-input:focus {
+  border-color: var(--primary-orange) !important;
+  box-shadow: 0 0 0 3px rgba(234, 135, 50, 0.1) !important;
+}
+
+/* Table hover improvements */
+.table-modern tr:hover {
+  background: var(--light-gray) !important;
+}
+
+/* Status badge improvements */
+.badge {
+  border: 1px solid transparent;
+}
+
+.badge-primary {
+  border-color: var(--primary-orange);
+}
+
+/* Loading state improvements */
+.loading {
+  opacity: 0.7;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .dashboard-card {
+    padding: 16px !important;
+    min-height: 80px !important;
+  }
+  
+  .dashboard-card .icon {
+    font-size: 1.5rem !important;
+  }
+  
+  .btn {
+    padding: 12px 16px !important;
+    width: 100% !important;
+  }
+}
+
+/* Accessibility improvements */
+.btn:focus,
+.form-input:focus,
+.nav-item:focus {
+  outline: 2px solid var(--primary-orange) !important;
+  outline-offset: 2px !important;
+}
+
+/* Animation improvements */
+.dashboard-card {
+  animation-delay: calc(var(--index, 0) * 0.1s);
+}
+
+/* Print improvements */
+@media print {
+  .dashboard-card {
+    break-inside: avoid !important;
+    background: white !important;
+    color: black !important;
+  }
+}
