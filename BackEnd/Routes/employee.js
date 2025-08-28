@@ -5,7 +5,13 @@ const router = express.Router();
 const {
   listEmployees,
   createEmployee,
+  getdata,
+  postdata
 } = require("../Controller/employeeController");
+
+// Standard endpoints that match other controllers
+router.get("/getdata", getdata || listEmployees);
+router.post("/postdata", postdata || createEmployee);
 
 // GET /employee/employees  → list employees for dropdowns
 router.get("/employees", listEmployees);

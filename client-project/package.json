@@ -22,11 +22,13 @@
     "react-scripts": "5.0.1",
     "react-time-picker": "^7.0.0",
     "recharts": "^2.13.3",
+    "serve": "^14.2.1",
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "react-scripts start",
+    "start:production": "serve -s build -l 3000",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

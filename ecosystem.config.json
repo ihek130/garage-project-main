@@ -1,0 +1,32 @@
+{
+  "apps": [
+    {
+      "name": "garage-backend",
+      "script": "BackEnd/Server.js",
+      "cwd": "/root/garage-project-main",
+      "instances": 1,
+      "exec_mode": "fork",
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": 5000
+      },
+      "error_file": "/root/logs/backend-error.log",
+      "out_file": "/root/logs/backend-out.log",
+      "log_file": "/root/logs/backend.log"
+    },
+    {
+      "name": "garage-frontend",
+      "script": "serve",
+      "args": "-s build -l 3000",
+      "cwd": "/root/garage-project-main/client-project",
+      "instances": 1,
+      "exec_mode": "fork",
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "error_file": "/root/logs/frontend-error.log",
+      "out_file": "/root/logs/frontend-out.log",
+      "log_file": "/root/logs/frontend.log"
+    }
+  ]
+}
