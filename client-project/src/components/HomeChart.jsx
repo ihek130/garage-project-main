@@ -5,6 +5,8 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 // Register the required components in Chart.js
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
+const API_BASE = (process.env.REACT_APP_API_URL || "http://localhost:5000").replace(/\/$/, "");
+
 const HomeBarChart = () => {
   const [incomeData, setIncomeData] = useState([]);
   const [expenseData, setExpenseData] = useState([]);
@@ -14,8 +16,8 @@ const HomeBarChart = () => {
   const fetchData = async () => {
     try {
       const [incomeResponse, expenseResponse] = await Promise.all([
-        fetch("http://localhost:5000/income/get/E-income"),
-        fetch("http://localhost:5000/expense/get/Eexpenses"),
+        fetch(`${API_BASE}/income/get/E-income`),
+        fetch(`${API_BASE}/expense/get/Eexpenses`),
       ]);
 
       const incomeData = await incomeResponse.json();

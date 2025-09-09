@@ -5,6 +5,8 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 // Register the necessary components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+const API_BASE = (process.env.REACT_APP_API_URL || "http://localhost:5000").replace(/\/$/, "");
+
 const DashboardChart = () => {
   const [chartData, setChartData] = useState({
     labels: [],
@@ -22,7 +24,7 @@ const DashboardChart = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/dashboard-data');
+        const response = await fetch(`${API_BASE}/api/dashboard-data`);
         const data = await response.json();
      console.log(data);
         setChartData({

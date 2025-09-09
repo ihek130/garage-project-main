@@ -8,6 +8,8 @@ import axios from 'axios';
 import { saveAs } from 'file-saver';
 import Navigation from './Navigation';
 import { MdDelete } from "react-icons/md";
+
+const API_BASE = (process.env.REACT_APP_API_URL || "http://localhost:5000").replace(/\/$/, "");
 import { FaRegEdit } from "react-icons/fa";
 import Modal from "../Modal";
 
@@ -70,7 +72,7 @@ function Employeetask() {
     };
 
     try {
-      await fetch("http://localhost:5000/vehicles/post/E-vehicles", {
+      await fetch(`${API_BASE}/vehicles/post/E-vehicles`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,7 +88,7 @@ function Employeetask() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch("http://localhost:5000/vehicles/get/E-vehicles");
+      const response = await fetch(`${API_BASE}/vehicles/get/E-vehicles`);
       const data = await response.json();
       setTaskData(data.rows);
       filterData(data.rows, dateFilter, searchQuery);
@@ -141,7 +143,7 @@ function Employeetask() {
 
   const handleConfirmDelete = async () => {
     try {
-      await fetch(`http://localhost:5000/vehicles/delete/${currentVehicle.id}`, {
+      await fetch(`${API_BASE}/vehicles/delete/${currentVehicle.id}`, {
         method: 'DELETE',
       });
       setDeleteModalOpen(false);
@@ -163,7 +165,7 @@ function Employeetask() {
     e.preventDefault();
 
     try {
-      await fetch(`http://localhost:5000/vehicles/update/${currentVehicle.id}`, {
+      await fetch(`${API_BASE}/vehicles/update/${currentVehicle.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
