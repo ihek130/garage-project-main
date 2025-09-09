@@ -19,9 +19,6 @@ const {
 // ── Legacy routes (kept) ───────────────────────────────────────────
 router.post("/post/E-pending", postdata);
 router.get("/get/E-pending", getdata);
-router.get("/get/Pending", getdata); // Add alias for frontend compatibility
-router.get("/get/pending", getdata); // Add alias for frontend compatibility
-router.get("/get", getdata); // Add alias for frontend compatibility
 router.put("/update/:id", updatedata);
 router.delete("/delete/:id", deletedata);
 
