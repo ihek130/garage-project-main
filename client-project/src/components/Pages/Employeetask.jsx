@@ -396,13 +396,13 @@ export default function Employeetask() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          name, 
-          vehicle: "N/A",
-          description: "Manually added customer",
-          date: new Date().toISOString().slice(0, 10),
-          contact: "To be updated",
-          amount: 0,
-          location: "N/A"
+          names: name, 
+          vehicles: "N/A",
+          descriptions: "Manually added customer",
+          dates: new Date().toISOString().slice(0, 10),
+          contacts: "To be updated",
+          amounts: 0,
+          locations: "N/A"
         }),
       });
       
