@@ -11,6 +11,8 @@ import { MdDelete } from "react-icons/md";
 import { FaRegEdit } from "react-icons/fa";
 import Modal from "../Modal";
 
+const API_BASE = (process.env.REACT_APP_API_URL || "http://localhost:5000").replace(/\/$/, "");
+
 function Employeetask() {
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [jobTitles, setJobTitles] = useState([null]);
@@ -62,7 +64,7 @@ function Employeetask() {
 
   const downloadExcel = (id) => {
     axios
-      .get(`http://localhost:5000/employeesalary/getexcel/${id}`, {
+      .get(`${API_BASE}/employeesalary/getexcel/${id}`, {
         responseType: "blob",
       })
       .then((response) => {
@@ -101,7 +103,7 @@ function Employeetask() {
 
     console.log('Submitting new salary data:', payload);
 
-    fetch("http://localhost:5000/employeesalary/post/Esalary", {
+    fetch(`${API_BASE}/employeesalary/post/Esalary`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -143,7 +145,7 @@ function Employeetask() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/employeesalary/add-advance", {
+      const response = await fetch(`${API_BASE}/employeesalary/add-advance`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -171,7 +173,7 @@ function Employeetask() {
   };
 
   const alldata = () => {
-    fetch("http://localhost:5000/employeesalary/get/Esalary")
+    fetch(`${API_BASE}/employeesalary/get/Esalary`)
       .then((response) => response.json())
       .then((data) => {
         setAllJobs(data.rows);
@@ -231,7 +233,7 @@ function Employeetask() {
   const handleConfirmDelete = async () => {
     try {
       await fetch(
-        `http://localhost:5000/employeesalary/delete/${currentEmployee.id}`,
+        `${API_BASE}/employeesalary/delete/${currentEmployee.id}`,
         {
           method: "DELETE",
         }
@@ -258,7 +260,7 @@ function Employeetask() {
       console.log('Submitting updated salary data:', formData);
       
       const response = await fetch(
-        `http://localhost:5000/employeesalary/update/${currentEmployee.id}`,
+        `${API_BASE}/employeesalary/update/${currentEmployee.id}`,
         {
           method: "PUT",
           headers: {

@@ -23,7 +23,7 @@ npm install serve
 
 # Build frontend for production
 echo "🏗️ Building frontend for production..."
-npm run build
+REACT_APP_API_URL=http://72.60.43.50:5000 npm run build
 
 # Restart services
 echo "🔄 Restarting services..."

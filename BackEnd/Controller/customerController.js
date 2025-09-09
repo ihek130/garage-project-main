@@ -141,8 +141,7 @@ exports.getdata = async (req, res) => {
       console.error("Error executing query", err);
       return res.status(500).json({ Message: "Internal Server Error" });
     }
-    // Return in the format expected by frontend
-    res.json({ customers: rows });
+    res.json({ rows });
   });
 };
 
