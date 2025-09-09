@@ -1036,7 +1036,6 @@ export default function Employeetask() {
                 <label className="text-xs text-gray-600 block mb-1">Hours</label>
                 <input
                   type="number"
-                  step="0.5"
                   className="border rounded px-3 py-2 text-sm w-full"
                   value={taskForm.hours}
                   onChange={(e) => setTaskForm((p) => ({ ...p, hours: e.target.value }))}
@@ -1048,7 +1047,6 @@ export default function Employeetask() {
                 <label className="text-xs text-gray-600 block mb-1">Rate (per hour)</label>
                 <input
                   type="number"
-                  step="0.01"
                   className="border rounded px-3 py-2 text-sm w-full"
                   value={taskForm.rate}
                   onChange={(e) => setTaskForm((p) => ({ ...p, rate: e.target.value }))}
