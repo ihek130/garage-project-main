@@ -8,10 +8,10 @@ import axios from 'axios';
 import { saveAs } from 'file-saver';
 import Navigation from './Navigation';
 import { MdDelete } from "react-icons/md";
-
-const API_BASE = (process.env.REACT_APP_API_URL || "http://localhost:5000").replace(/\/$/, "");
 import { FaRegEdit } from "react-icons/fa";
 import Modal from "../Modal";
+
+const API_BASE = (process.env.REACT_APP_API_URL || "http://localhost:5000").replace(/\/$/, "");
 
 function Employeetask() {
   const [dropdownOpen, setDropdownOpen] = useState(null);
