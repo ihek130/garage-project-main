@@ -21,9 +21,9 @@ cd ../client-project
 npm install
 npm install serve
 
-# Build frontend for production
+# Build frontend for production (will automatically use .env.production)
 echo "🏗️ Building frontend for production..."
-REACT_APP_API_URL=http://72.60.43.50:5000 npm run build
+npm run build
 
 # Restart services
 echo "🔄 Restarting services..."

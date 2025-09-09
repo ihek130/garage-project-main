@@ -19,11 +19,11 @@ exports.postdata = async (req, res) => {
       Employee: payload.Employee || payload.employee || payload.name || "",
       Company: payload.Company || payload.company || "",
       Date: payload.Date || payload.date || "",
-      Title: payload.Title || payload.title || "",
+      Vehicle: payload.Vehicle || payload.vehicle || payload.Title || payload.title || "", // Support both Vehicle and Title
       Details: payload.Details || payload.details || payload.task || "",
       Hours: parseFloat(payload.Hours || payload.hours || 0),
       Rate: parseFloat(payload.Rate || payload.rate || 0),
-      Status: payload.Status || payload.status || "pending",
+      Status: payload.Status || payload.status || "bill pending",
       Location: payload.Location || payload.location || ""
     };
     
@@ -77,18 +77,16 @@ exports.postdata = async (req, res) => {
         return res.status(500).json({ Message: "Internal Server Error" });
       }
       
-      // Auto-generate income entry if task is completed and has amount
-      if (standardized.Status === "completed" && standardized.Amount > 0) {
-        const incomeData = {
-          source: standardized.Company || "Task Completion",
-          description: `${standardized.Title} - ${standardized.Employee}`,
-          date: standardized.Date,
-          amount: standardized.Amount,
-          status: "pending",
-          task_id: this.lastID
-        };
-        
-        const incomeKeys = Object.keys(incomeData).join(", ");
+        // Auto-generate income entry if task is completed and has amount
+        if ((standardized.Status === "bill done" || standardized.Status === "completed") && standardized.Amount > 0) {
+          const incomeData = {
+            source: standardized.Company || "Task Completion",
+            description: `${standardized.Vehicle} - ${standardized.Employee}`,
+            date: standardized.Date,
+            amount: standardized.Amount,
+            status: "pending",
+            task_id: this.lastID
+          };        const incomeKeys = Object.keys(incomeData).join(", ");
         const incomePlaceholders = Object.keys(incomeData).map(() => "?").join(", ");
         const incomeValues = Object.values(incomeData);
         const incomeSql = `INSERT INTO income (${incomeKeys}) VALUES (${incomePlaceholders})`;
@@ -230,15 +228,16 @@ exports.deletedata = async (req, res) => {
     const id = req.params.id;
     if (!id) return res.status(400).json({ Message: "Missing id" });
 
-    connectDB.query("DELETE FROM employee_task WHERE id = ?", [id], (err, result) => {
+    db.run("DELETE FROM employee_task WHERE id = ?", [id], function(err) {
       if (err) {
         console.error("deletedata error:", err);
         return res.status(500).json({ Message: "Internal Server Error" });
       }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ Message: "Not found" });
+      if (this.changes === 0) {
+        return res.status(404).json({ Message: "Task not found" });
       }
-      res.json({ Message: "Deleted" });
+      console.log(`✅ Successfully deleted task with id: ${id}`);
+      res.json({ Message: "Deleted", deletedRows: this.changes });
     });
   } catch (e) {
     console.error("deletedata exception:", e);
