@@ -251,14 +251,14 @@ exports.deletedata = async (req, res) => {
  */
 exports.groupedByEmployee = async (req, res) => {
   try {
-    // Does `employees` table exist?
+    // Check if `employees` table exists using SQLite syntax
     const existsSql = `
       SELECT COUNT(*) AS cnt
-      FROM information_schema.tables
-      WHERE table_schema = DATABASE() AND table_name = 'employees'
+      FROM sqlite_master 
+      WHERE type='table' AND name='employees'
     `;
     const existsRows = await new Promise((resolve, reject) => {
-      connectDB.query(existsSql, (err, rows) => (err ? reject(err) : resolve(rows)));
+      db.all(existsSql, (err, rows) => (err ? reject(err) : resolve(rows)));
     });
     const hasEmployees = existsRows && existsRows[0] && Number(existsRows[0].cnt) > 0;
 
@@ -267,11 +267,11 @@ exports.groupedByEmployee = async (req, res) => {
         SELECT e.id AS employeeId, e.name AS employeeName,
                t.id AS taskId, t.*
         FROM employees e
-        LEFT JOIN employee_task t ON t.name = e.name
+        LEFT JOIN employee_task t ON t.Employee = e.name
         ORDER BY e.name ASC, t.id DESC
       `;
       const rows = await new Promise((resolve, reject) => {
-        connectDB.query(sql, (err, r) => (err ? reject(err) : resolve(r)));
+        db.all(sql, (err, r) => (err ? reject(err) : resolve(r)));
       });
 
       const groups = {};
@@ -291,14 +291,14 @@ exports.groupedByEmployee = async (req, res) => {
 
     // Fallback: group by free-text name from employee_task
     const allTasks = await new Promise((resolve, reject) => {
-      connectDB.query("SELECT * FROM employee_task ORDER BY name ASC, id DESC", (err, r) =>
+      db.all("SELECT * FROM employee_task ORDER BY Employee ASC, id DESC", (err, r) =>
         err ? reject(err) : resolve(r)
       );
     });
 
     const groups = {};
     for (const t of allTasks) {
-      const key = t.name || "Unknown";
+      const key = t.Employee || "Unknown";
       if (!groups[key]) groups[key] = { employeeId: null, name: key, tasks: [] };
       groups[key].tasks.push({ ...t });
     }
@@ -320,7 +320,7 @@ exports.postTaskByEmployee = async (req, res) => {
     if (!employeeId) return res.status(400).json({ Message: "employeeId is required" });
 
     const empRows = await new Promise((resolve, reject) => {
-      connectDB.query(
+      db.all(
         "SELECT id, name FROM employees WHERE id = ?",
         [employeeId],
         (err, rows) => (err ? reject(err) : resolve(rows))
@@ -329,10 +329,23 @@ exports.postTaskByEmployee = async (req, res) => {
     const emp = empRows && empRows[0];
     if (!emp) return res.status(404).json({ Message: "Employee not found" });
 
-    const payload = { ...(req.body || {}), name: emp.name };
+    const payload = { ...(req.body || {}), Employee: emp.name };
 
     await new Promise((resolve, reject) => {
-      connectDB.query("INSERT INTO employee_task SET ?", payload, (err) =>
+      const insertSql = "INSERT INTO employee_task (Employee, Company, Date, Title, Details, Hours, Rate, Amount, Status, Location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      const values = [
+        payload.Employee || emp.name,
+        payload.Company || "",
+        payload.Date || "",
+        payload.Title || "",
+        payload.Details || "",
+        payload.Hours || 0,
+        payload.Rate || 0,
+        payload.Amount || 0,
+        payload.Status || "",
+        payload.Location || ""
+      ];
+      db.run(insertSql, values, (err) =>
         err ? reject(err) : resolve()
       );
     });
