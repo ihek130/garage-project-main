@@ -86,17 +86,19 @@ exports.postdata = async (req, res) => {
             amount: standardized.Amount,
             status: "pending",
             task_id: this.lastID
-          };        const incomeKeys = Object.keys(incomeData).join(", ");
-        const incomePlaceholders = Object.keys(incomeData).map(() => "?").join(", ");
-        const incomeValues = Object.values(incomeData);
-        const incomeSql = `INSERT INTO income (${incomeKeys}) VALUES (${incomePlaceholders})`;
-        
-        db.run(incomeSql, incomeValues, (incomeErr) => {
-          if (incomeErr) {
-            console.error("Auto-income creation error:", incomeErr);
-          }
-        });
-      }
+          };
+          
+          const incomeKeys = Object.keys(incomeData).join(", ");
+          const incomePlaceholders = Object.keys(incomeData).map(() => "?").join(", ");
+          const incomeValues = Object.values(incomeData);
+          const incomeSql = `INSERT INTO income (${incomeKeys}) VALUES (${incomePlaceholders})`;
+          
+          db.run(incomeSql, incomeValues, (incomeErr) => {
+            if (incomeErr) {
+              console.error("Auto-income creation error:", incomeErr);
+            }
+          });
+        }
       
       res.status(201).json({ Message: "Created", id: this.lastID, amount: standardized.Amount });
     });
