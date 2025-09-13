@@ -14,7 +14,7 @@
     {
       "name": "garage-frontend",
       "script": "serve",
-      "args": "-s build -l 3000",
+      "args": "-s build -p 3000",
       "cwd": "/root/garage-project-main/client-project",
       "instances": 1,
       "exec_mode": "fork",
