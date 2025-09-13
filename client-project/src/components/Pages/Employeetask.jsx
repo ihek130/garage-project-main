@@ -392,17 +392,16 @@ export default function Employeetask() {
     const name = newCustomerName.trim();
     if (!name) return alert("Enter a customer name.");
     try {
-      const response = await fetch(`${API_BASE}/customer/post/E-customer`, {
+      const response = await fetch(`${API_BASE}/customer/add-new-customer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          names: name, 
-          vehicles: "N/A",
-          descriptions: "Manually added customer",
-          dates: new Date().toISOString().slice(0, 10),
-          contacts: "To be updated",
-          amounts: 0,
-          locations: "N/A"
+          name: name, 
+          vehicle: "N/A",
+          description: "Manually added customer",
+          contact: "To be updated",
+          amount: 0,
+          location: "N/A"
         }),
       });
       
@@ -412,7 +411,8 @@ export default function Employeetask() {
         setShowNewCustomer(false);
         setNewCustomerName("");
       } else {
-        alert("Could not create customer. Please try again.");
+        const result = await response.json();
+        alert(result.Message || "Could not create customer. Please try again.");
       }
     } catch (error) {
       console.error("Error creating customer:", error);

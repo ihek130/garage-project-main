@@ -35,12 +35,33 @@ exports.postdata = async (req, res) => {
 // GET /pending/get/E-pending
 exports.getdata = async (_req, res) => {
   try {
-    db.all("SELECT * FROM pending ORDER BY id DESC", (err, rows) => {
+    db.all("SELECT * FROM pending ORDER BY date DESC, id DESC", async (err, rows) => {
       if (err) {
         console.error("pending.getdata error:", err);
         return res.status(500).json({ Message: "Internal Server Error" });
       }
-      res.json(rows);
+      
+      // If no pending data, try to refresh automatically
+      if (!rows || rows.length === 0) {
+        try {
+          console.log("📋 No pending data found, auto-refreshing...");
+          await exports.refreshPendingData();
+          
+          // Fetch again after refresh
+          db.all("SELECT * FROM pending ORDER BY date DESC, id DESC", (err2, rows2) => {
+            if (err2) {
+              console.error("pending.getdata error after refresh:", err2);
+              return res.status(500).json({ Message: "Internal Server Error" });
+            }
+            res.json(rows2 || []);
+          });
+        } catch (refreshError) {
+          console.error("Error auto-refreshing pending data:", refreshError);
+          res.json(rows || []); // Return empty array if refresh fails
+        }
+      } else {
+        res.json(rows);
+      }
     });
   } catch (e) {
     console.error("pending.getdata exception:", e);
@@ -319,5 +340,206 @@ const createIncomeFromPayment = async (invoice, amountReceived) => {
     });
   } catch (error) {
     console.error('Error in createIncomeFromPayment:', error);
+  }
+};
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * AUTOMATION FUNCTIONS: Auto-populate pending table from tasks and invoices
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+// Function to ensure pending table has all required columns
+exports.initializePendingTable = async () => {
+  return new Promise((resolve, reject) => {
+    // Check if the enhanced columns exist and add them if not
+    const alterCommands = [
+      "ALTER TABLE pending ADD COLUMN type TEXT DEFAULT 'payment'",
+      "ALTER TABLE pending ADD COLUMN customer TEXT",
+      "ALTER TABLE pending ADD COLUMN employee_name TEXT",  
+      "ALTER TABLE pending ADD COLUMN description TEXT",
+      "ALTER TABLE pending ADD COLUMN source_id INTEGER",
+      "ALTER TABLE pending ADD COLUMN source_table TEXT",
+      "ALTER TABLE pending ADD COLUMN advance REAL DEFAULT 0",
+      "ALTER TABLE pending ADD COLUMN pending REAL DEFAULT 0",
+      "ALTER TABLE pending ADD COLUMN total_amount REAL",
+      "ALTER TABLE pending ADD COLUMN advance_paid REAL"
+    ];
+
+    let completed = 0;
+    const total = alterCommands.length;
+
+    alterCommands.forEach(command => {
+      db.run(command, (err) => {
+        // Ignore "duplicate column name" errors - column already exists
+        if (err && !err.message.includes('duplicate column name')) {
+          console.error('Error altering pending table:', err.message);
+        }
+        completed++;
+        if (completed === total) {
+          console.log('✅ Pending table schema updated');
+          resolve();
+        }
+      });
+    });
+  });
+};
+
+// Function to refresh the pending table with current pending tasks and payments
+exports.refreshPendingData = async () => {
+  try {
+    console.log("🔄 Refreshing pending data...");
+    
+    // First ensure table has required columns
+    await exports.initializePendingTable();
+    
+    // Clear existing pending data
+    await new Promise((resolve, reject) => {
+      db.run("DELETE FROM pending", (err) => err ? reject(err) : resolve());
+    });
+
+    // 1. Add pending tasks from employee_task table
+    const pendingTasks = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT et.* 
+        FROM employee_task et 
+        WHERE et.status = 'pending' OR et.Status = 'pending'
+      `, (err, rows) => err ? reject(err) : resolve(rows || []));
+    });
+
+    for (const task of pendingTasks) {
+      // Try enhanced schema first, fallback to simple schema
+      try {
+        const taskAmount = Number(task.amount || task.Amount || task.Charges || 0);
+        const pendingData = {
+          name: task.customer || task.Customer || task.Company || task.Employee || 'Unknown', // Frontend expects 'name'
+          amount: taskAmount, // Total task amount
+          advance: 0, // Tasks typically don't have advance payments
+          pending: taskAmount, // Full amount is pending for tasks
+          date: task.date || task.Date || new Date().toISOString().split('T')[0],
+          status: 'pending',
+          type: 'task',
+          customer: task.customer || task.Customer || task.Company || 'N/A',
+          employee_name: task.Employee || task.employee || 'Unknown',
+          description: `Task: ${task.Task || task.task_description || 'Task'}`,
+          source_id: task.id,
+          source_table: 'employee_task'
+        };
+
+        await new Promise((resolve, reject) => {
+          const keys = Object.keys(pendingData).join(", ");
+          const placeholders = Object.keys(pendingData).map(() => "?").join(", ");
+          const values = Object.values(pendingData);
+          const sql = `INSERT INTO pending (${keys}) VALUES (${placeholders})`;
+          db.run(sql, values, (err) => err ? reject(err) : resolve());
+        });
+      } catch (err) {
+        // Fallback to simple schema if enhanced schema fails
+        console.log("Falling back to simple pending schema...");
+        const taskAmount = Number(task.amount || task.Amount || task.Charges || 0);
+        const simplePendingData = {
+          name: task.customer || task.Customer || task.Company || task.Employee || 'Unknown',
+          amount: taskAmount,
+          date: task.date || task.Date || new Date().toISOString().split('T')[0],
+          status: 'pending'
+        };
+
+        await new Promise((resolve, reject) => {
+          const keys = Object.keys(simplePendingData).join(", ");
+          const placeholders = Object.keys(simplePendingData).map(() => "?").join(", ");
+          const values = Object.values(simplePendingData);
+          const sql = `INSERT INTO pending (${keys}) VALUES (${placeholders})`;
+          db.run(sql, values, (err) => err ? reject(err) : resolve());
+        });
+      }
+    }
+
+    // 2. Add pending payments from invoice table
+    const pendingInvoices = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT * FROM invoice 
+        WHERE status = 'pending' 
+        OR (amount - COALESCE(advance, 0)) > 0
+      `, (err, rows) => err ? reject(err) : resolve(rows || []));
+    });
+
+    for (const invoice of pendingInvoices) {
+      const amount = Number(invoice.amount || 0);
+      const advance = Number(invoice.advance || 0);
+      const pendingAmount = Math.max(amount - advance, 0);
+
+      if (pendingAmount > 0) {
+        // Try enhanced schema first, fallback to simple schema
+        try {
+          const pendingData = {
+            name: invoice.customer_name || invoice.customer || invoice.name || 'Unknown Customer', // Frontend expects 'name'
+            amount: amount, // Total invoice amount
+            advance: advance, // Amount already paid
+            pending: pendingAmount, // Amount still owed
+            date: invoice.date || invoice.created_at || new Date().toISOString().split('T')[0],
+            status: 'pending',
+            type: 'payment',
+            customer: invoice.customer_name || invoice.customer || invoice.name || 'Unknown Customer',
+            description: `Invoice #${invoice.invoice_no || invoice.id}: ${invoice.description || 'Payment Due'}`,
+            total_amount: amount,
+            advance_paid: advance,
+            source_id: invoice.id,
+            source_table: 'invoice'
+          };
+
+          await new Promise((resolve, reject) => {
+            const keys = Object.keys(pendingData).join(", ");
+            const placeholders = Object.keys(pendingData).map(() => "?").join(", ");
+            const values = Object.values(pendingData);
+            const sql = `INSERT INTO pending (${keys}) VALUES (${placeholders})`;
+            db.run(sql, values, (err) => err ? reject(err) : resolve());
+          });
+        } catch (err) {
+          // Fallback to simple schema if enhanced schema fails
+          console.log("Falling back to simple pending schema for invoice...");
+          const simplePendingData = {
+            name: invoice.customer_name || invoice.customer || invoice.name || 'Unknown Customer',
+            amount: amount, // Total amount
+            advance: advance, // Amount paid  
+            pending: pendingAmount, // Amount pending
+            date: invoice.date || invoice.created_at || new Date().toISOString().split('T')[0],
+            status: 'pending'
+          };
+
+          await new Promise((resolve, reject) => {
+            const keys = Object.keys(simplePendingData).join(", ");
+            const placeholders = Object.keys(simplePendingData).map(() => "?").join(", ");
+            const values = Object.values(simplePendingData);
+            const sql = `INSERT INTO pending (${keys}) VALUES (${placeholders})`;
+            db.run(sql, values, (err) => err ? reject(err) : resolve());
+          });
+        }
+      }
+    }
+
+    console.log(`✅ Pending data refreshed: ${pendingTasks.length} tasks, ${pendingInvoices.filter(inv => {
+      const amount = Number(inv.amount || 0);
+      const advance = Number(inv.advance || 0);
+      return Math.max(amount - advance, 0) > 0;
+    }).length} payments`);
+
+    return { tasks: pendingTasks.length, payments: pendingInvoices.length };
+  } catch (error) {
+    console.error("Error refreshing pending data:", error);
+    throw error;
+  }
+};
+
+// GET /pending/refresh - Manual trigger to refresh pending data
+exports.refreshPendingEndpoint = async (req, res) => {
+  try {
+    const result = await exports.refreshPendingData();
+    res.json({ 
+      message: "Pending data refreshed successfully", 
+      result 
+    });
+  } catch (error) {
+    console.error("Error in refreshPendingEndpoint:", error);
+    res.status(500).json({ message: "Error refreshing pending data", error: error.message });
   }
 };

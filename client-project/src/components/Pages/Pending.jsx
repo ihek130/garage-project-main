@@ -86,6 +86,10 @@ export default function Pending() {
             : Math.max(Number(r.amount ?? 0) - Number(r.advance ?? 0), 0)
         ),
         status: r.status || "pending",
+        type: r.type || "payment", // Preserve type field from backend
+        employee_name: r.employee_name || null, // For tasks
+        description: r.description || null, // For additional info
+        source_table: r.source_table || null, // Track source
       }));
 
       // Sort by highest pending first
@@ -109,12 +113,34 @@ export default function Pending() {
 
   const totals = useMemo(() => {
     let totalPending = 0, totalAmount = 0, totalReceived = 0;
+    let taskCount = 0, paymentCount = 0;
+    let taskPending = 0, paymentPending = 0;
+    
     for (const r of filtered) {
-      totalPending += Number(r.pending || 0);
-      totalAmount += Number(r.amount || 0);
-      totalReceived += Number(r.amount || 0) - Number(r.pending || 0);
+      const pending = Number(r.pending || 0);
+      const amount = Number(r.amount || 0);
+      
+      totalPending += pending;
+      totalAmount += amount;
+      totalReceived += amount - pending;
+      
+      if (r.type === 'task') {
+        taskCount++;
+        taskPending += pending;
+      } else {
+        paymentCount++;
+        paymentPending += pending;
+      }
     }
-    return { totalAmount, totalPending, totalReceived };
+    return { 
+      totalAmount, 
+      totalPending, 
+      totalReceived, 
+      taskCount, 
+      paymentCount, 
+      taskPending, 
+      paymentPending 
+    };
   }, [filtered]);
 
   const getReceive = (id) => receiveAmount[id] || "";
@@ -189,6 +215,20 @@ export default function Pending() {
           </div>
         </div>
 
+        {/* Task/Payment Breakdown */}
+        <div className="px-4 md:px-6 pb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="bg-blue-50 rounded-lg shadow p-3 border border-blue-200">
+            <div className="text-xs text-blue-600 font-medium">Pending Tasks</div>
+            <div className="text-xl font-semibold text-blue-800">{totals.taskCount} tasks</div>
+            <div className="text-sm text-blue-600">Amount: {totals.taskPending}</div>
+          </div>
+          <div className="bg-green-50 rounded-lg shadow p-3 border border-green-200">
+            <div className="text-xs text-green-600 font-medium">Pending Payments</div>
+            <div className="text-xl font-semibold text-green-800">{totals.paymentCount} payments</div>
+            <div className="text-sm text-green-600">Amount: {totals.paymentPending}</div>
+          </div>
+        </div>
+
         {/* Desktop table */}
         <div className="p-4 md:p-6 hidden md:block">
           <div className="bg-white rounded-lg shadow p-4 overflow-x-auto">
@@ -196,7 +236,8 @@ export default function Pending() {
               <thead>
                 <tr className="bg-gray-100 text-[#3d3d3d]">
                   <th className="py-2 px-3 text-left text-xs">#</th>
-                  <th className="py-2 px-3 text-left text-xs">Customer</th>
+                  <th className="py-2 px-3 text-left text-xs">Type</th>
+                  <th className="py-2 px-3 text-left text-xs">Customer/Employee</th>
                   <th className="py-2 px-3 text-left text-xs">Date</th>
                   <th className="py-2 px-3 text-left text-xs">Amount</th>
                   <th className="py-2 px-3 text-left text-xs">Pending</th>
@@ -207,7 +248,7 @@ export default function Pending() {
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan="7" className="py-6 text-center text-sm text-gray-500">
+                    <td colSpan="8" className="py-6 text-center text-sm text-gray-500">
                       Loading…
                     </td>
                   </tr>
@@ -216,7 +257,23 @@ export default function Pending() {
                   filtered.map((r) => (
                     <tr key={r.id} className="border-t align-top">
                       <td className="py-2 px-3 text-sm">{r.id}</td>
-                      <td className="py-2 px-3 text-sm">{r.name}</td>
+                      <td className="py-2 px-3 text-sm">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          r.type === 'task' 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {r.type === 'task' ? 'Task' : 'Payment'}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-sm">
+                        <div>
+                          <div className="font-medium">{r.name}</div>
+                          {r.type === 'task' && r.employee_name && (
+                            <div className="text-xs text-gray-500">Employee: {r.employee_name}</div>
+                          )}
+                        </div>
+                      </td>
                       <td className="py-2 px-3 text-sm">
                         {r.date ? new Date(r.date).toLocaleDateString() : ""}
                       </td>
@@ -241,7 +298,7 @@ export default function Pending() {
                             disabled={Number(r.pending) <= 0}
                             title={Number(r.pending) <= 0 ? "Nothing pending" : "Mark received"}
                           >
-                            Receive
+                            {r.type === 'task' ? 'Complete' : 'Receive'}
                           </button>
                         </div>
                       </td>

@@ -6,10 +6,7 @@
       "cwd": "/root/garage-project-main",
       "instances": 1,
       "exec_mode": "fork",
-      "env": {
-        "NODE_ENV": "production",
-        "PORT": 5000
-      },
+      "env_file": "BackEnd/.env.production",
       "error_file": "/root/logs/backend-error.log",
       "out_file": "/root/logs/backend-out.log",
       "log_file": "/root/logs/backend.log"

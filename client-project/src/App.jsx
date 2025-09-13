@@ -17,6 +17,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Pending from './components/Pages/Pending';
 import Expenses from './components/Pages/Expenses';
 import EmployeeDetails from './components/Pages/EmployeeDetails';
+import SOA from './components/Pages/SOA';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
   <Route path="/report" element={<PrivateRoute element={<Report />} />} />
   <Route path="/pending" element={<PrivateRoute element={<Pending />} />} />
   <Route path="/expenses" element={<PrivateRoute element={<Expenses />} />} />
+  <Route path="/soa" element={<PrivateRoute element={<SOA />} />} />
       </Routes>
     </AuthProvider>
   );

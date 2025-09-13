@@ -1,6 +1,9 @@
 // BackEnd/server.js
 console.log("Step 1: Starting main server...");
 
+// Load environment variables
+require('dotenv').config();
+
 // Add process event listeners to catch any exits
 process.on('exit', (code) => {
   console.log(`❌ Process exiting with code: ${code}`);
@@ -25,18 +28,31 @@ console.log("Step 3: Dependencies loaded");
 const app = express();
 console.log("Step 4: App created");
 
-const Port = 5000;
-console.log("Step 5: Port set");
+const Port = process.env.PORT || 5000;
+console.log("Step 5: Port set to", Port);
 
 // Middleware
-app.use(cors());
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
+app.use(cors({
+  origin: corsOrigin,
+  credentials: true
+}));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-console.log("Step 6: Middleware configured");
+console.log("Step 6: Middleware configured with CORS origin:", corsOrigin);
 
 // Static files
-app.use("/assets", express.static(path.join(__dirname, "assets")));
-console.log("Step 7: Static files configured");
+// Static Files Path
+const uploadsPath = process.env.UPLOADS_PATH || './assets/uploads';
+const templatesPath = process.env.TEMPLATES_PATH || './assets/templates';
+const invoiceFilesPath = process.env.INVOICE_FILES_PATH || './assets/invoice_files';
+const assetsPath = process.env.ASSETS_PATH || './assets';
+
+app.use('/assets/uploads', express.static(uploadsPath));
+app.use('/templates', express.static(templatesPath));
+app.use('/invoice_files', express.static(invoiceFilesPath));
+app.use('/assets', express.static(assetsPath));
+console.log("Step 7: Static file paths configured:", { uploadsPath, templatesPath, invoiceFilesPath, assetsPath });
 
 // Database connection
 const connectDB = require("./Config/db");
@@ -171,11 +187,31 @@ try {
   console.error("Error loading expense route:", error);
 }
 
+// Add pending route (for pending tasks and payments)
+try {
+  const pending = require("./Routes/pending");
+  app.use("/api/pending", pending);
+  app.use("/pending", pending);
+  console.log("Step 17: Pending route loaded");
+} catch (error) {
+  console.error("Error loading pending route:", error);
+}
+
+// Add SOA (Statement of Account) route
+try {
+  const soa = require("./Routes/soa");
+  app.use("/api/soa", soa);
+  app.use("/soa", soa);
+  console.log("Step 18: SOA route loaded");
+} catch (error) {
+  console.error("Error loading SOA route:", error);
+}
+
 // Add employee salary route
 try {
   const employeeSalary = require("./Routes/employeeSalary");
   app.use("/employeesalary", employeeSalary);
-  console.log("Step 18: Employee salary route loaded");
+  console.log("Step 19: Employee salary route loaded");
 } catch (error) {
   console.error("Error loading employee salary route:", error);
 }
@@ -185,12 +221,12 @@ try {
   const employeeDetails = require("./Routes/employeeDetails");
   app.use("/api/employeedetails", employeeDetails);
   app.use("/employeedetails", employeeDetails); // Legacy support
-  console.log("Step 19: Employee details route loaded");
+  console.log("Step 20: Employee details route loaded");
 } catch (error) {
   console.error("Error loading employee details route:", error);
 }
 
-console.log("Step 17: All essential automation routes loaded");
+console.log("Step 20: All essential automation routes loaded");
 
 // -------- Start server --------
 const server = app.listen(Port, () => {

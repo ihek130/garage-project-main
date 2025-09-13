@@ -29,6 +29,7 @@ export default function Navigation() {
     { to: "/expenses", label: "Expenses" },
     { to: "/employeesalary", label: "Employee Salary" },
     { to: "/report", label: "Report" },
+    { to: "/soa", label: "SOA" },
     // { to: "/signin", label: "Sign in" }, // usually hidden once logged in
   ];
 

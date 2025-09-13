@@ -66,13 +66,13 @@ exports.insertdata = async (req, res) => {
 
     // Ensure all required fields are present
     if (
-      !names ||
-      !vehicles ||
-      !descriptions ||
-      !dates ||
-      !contacts ||
-      !amounts ||
-      !locations
+      names === undefined ||
+      vehicles === undefined ||
+      descriptions === undefined ||
+      dates === undefined ||
+      contacts === undefined ||
+      amounts === undefined ||
+      locations === undefined
     ) {
       return res.status(400).json({ Message: "All fields are required" });
     }

@@ -14,6 +14,9 @@ const {
   listByCustomerPending,
   addPendingInvoice,
   markInvoiceReceived,
+
+  // automation functions
+  refreshPendingEndpoint,
 } = require("../Controller/pendingController");
 
 // ── Legacy routes (kept) ───────────────────────────────────────────
@@ -21,6 +24,9 @@ router.post("/post/E-pending", postdata);
 router.get("/get/E-pending", getdata);
 router.put("/update/:id", updatedata);
 router.delete("/delete/:id", deletedata);
+
+// ── Automation routes ──────────────────────────────────────────────
+router.get("/refresh", refreshPendingEndpoint);
 
 // ── New derived routes (recommended) ───────────────────────────────
 // Overall totals
