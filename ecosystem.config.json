@@ -13,8 +13,7 @@
     },
     {
       "name": "garage-frontend",
-      "script": "serve",
-      "args": "-s build -p 3000",
+      "script": "server.js",
       "cwd": "/root/garage-project-main/client-project",
       "instances": 1,
       "exec_mode": "fork",

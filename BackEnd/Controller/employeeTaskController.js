@@ -19,7 +19,7 @@ exports.postdata = async (req, res) => {
       Employee: payload.Employee || payload.employee || payload.name || "",
       Company: payload.Company || payload.company || "",
       Date: payload.Date || payload.date || "",
-      Vehicle: payload.Vehicle || payload.vehicle || payload.Title || payload.title || "", // Support both Vehicle and Title
+      Vehicle: payload.Vehicle || payload.vehicle || payload.Title || payload.title || "", // Now using correct Vehicle column
       Details: payload.Details || payload.details || payload.task || "",
       Hours: parseFloat(payload.Hours || payload.hours || 0),
       Rate: parseFloat(payload.Rate || payload.rate || 0),
@@ -76,6 +76,23 @@ exports.postdata = async (req, res) => {
         console.error("postdata error:", err);
         return res.status(500).json({ Message: "Internal Server Error" });
       }
+      
+      // Auto-generate timesheet_no and bill_number for the new record
+      const taskId = this.lastID;
+      const year = new Date(standardized.Date).getFullYear();
+      const paddedId = String(taskId).padStart(3, '0');
+      const timesheetNo = `TS-${paddedId}-${year}`;
+      const billNumber = `BILL-${paddedId}-${year}`;
+      
+      // Update the newly created record with auto-generated values
+      const updateSql = "UPDATE employee_task SET timesheet_no = ?, bill_number = ? WHERE id = ?";
+      db.run(updateSql, [timesheetNo, billNumber, taskId], (updateErr) => {
+        if (updateErr) {
+          console.error("Error updating timesheet_no and bill_number:", updateErr);
+        } else {
+          console.log(`✅ Auto-generated: timesheet_no=${timesheetNo}, bill_number=${billNumber}`);
+        }
+      });
       
         // Auto-generate income entry if task is completed and has amount
         if ((standardized.Status === "bill done" || standardized.Status === "completed") && standardized.Amount > 0) {

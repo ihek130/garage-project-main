@@ -22,7 +22,7 @@ const SOA = () => {
 
     const fetchCompanies = async () => {
         try {
-            const response = await fetch(`${API_URL}/soa/companies`);
+            const response = await fetch(`${API_URL}/api/soa/companies`);
             const data = await response.json();
             setCompanies(data);
         } catch (error) {
@@ -41,7 +41,7 @@ const SOA = () => {
         setError('');
 
         try {
-            let url = `${API_URL}/soa/data?company=${encodeURIComponent(selectedCompany)}`;
+            let url = `${API_URL}/api/soa/data?company=${encodeURIComponent(selectedCompany)}`;
             if (startDate) url += `&startDate=${startDate}`;
             if (endDate) url += `&endDate=${endDate}`;
 

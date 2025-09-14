@@ -68,7 +68,7 @@ const TASK_LIST = [
 ];
 
   // Always use the correct backend endpoint for creating tasks
-  const TASK_CREATE = ["/employeetask/post/Etask"];
+  const TASK_CREATE = ["/api/employeetask/post/Etask"];
 
 async function tryFetchJSON(urls, options) {
   for (const p of urls) {
@@ -431,7 +431,7 @@ export default function Employeetask() {
       Employee: selectedEmployee,
       Company: taskForm.company,
       Date: taskForm.date,
-      Vehicle: taskForm.vehicle, // Changed from Title to Vehicle
+      Vehicle: taskForm.vehicle, // Now using correct Vehicle column in database
       Details: taskForm.details,
       Hours: parseFloat(taskForm.hours) || 0,
       Rate: parseFloat(taskForm.rate) || 0,

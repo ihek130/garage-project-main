@@ -56,7 +56,8 @@ const getSOAData = (req, res) => {
             Location,
             Vehicle,
             timesheet_no,
-            bill_number
+            bill_number,
+            invoice_id
         FROM employee_task 
         WHERE Company = ?
     `;
@@ -123,7 +124,8 @@ const downloadPDF = (req, res) => {
             Location,
             Vehicle,
             timesheet_no,
-            bill_number
+            bill_number,
+            invoice_id
         FROM employee_task 
         WHERE Company = ?
     `;
@@ -261,7 +263,8 @@ const downloadExcel = (req, res) => {
             Location,
             Vehicle,
             timesheet_no,
-            bill_number
+            bill_number,
+            invoice_id
         FROM employee_task 
         WHERE Company = ?
     `;
